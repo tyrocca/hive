@@ -1,8 +1,11 @@
-from .point import Point
-from .board import Board
+import random
 
-PLAYER_1 = 'p1'
-PLAYER_2 = 'p2'
+from typing import List, Set
+from functools import reduce
+
+from .point import Point
+from .piece import Piece
+from .constants import PLAYER_1, PLAYER_2
 
 
 class Board:
@@ -17,10 +20,6 @@ class Board:
 
         # represents the points that are "in use"
         self.active_points = {}
-
-        self._min_x, self._max_x = 0, 0
-        self._min_y, self._max_y = 0, 0
-
 
         # all games start with 2 pieces placed, neither is initialized
         self.first_piece = Piece(Point(0, 0), "0", PLAYER_1)
@@ -111,23 +110,18 @@ class Board:
         self.add_piece(Piece(random_point, random.choice(piece_names), PLAYER_1))
         self.print_board()
 
-    def is_complete(self):
-        p = self.pieces[0]
+    # def is_complete(self):
+    #     p = self.pieces[0]
 
-        all_pieces = set(self.pieces)
+    #     all_pieces = set(self.pieces)
 
-        visited = {}
-        touched = {p}
-        while True:
-            if traversed == all_pieces:
-                return True
-            # pieces should hash to the same thing as a point?
-            for point in p.available_spots:
-                if point in self.pieces:
-                    to_visit.add(self.pieces.get(point))
-
-
-
-
-
+    #     visited = {}
+    #     touched = {p}
+    #     while True:
+    #         if traversed == all_pieces:
+    #             return True
+    #         # pieces should hash to the same thing as a point?
+    #         for point in p.available_spots:
+    #             if point in self.pieces:
+    #                 to_visit.add(self.pieces.get(point))
 

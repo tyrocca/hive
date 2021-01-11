@@ -1,22 +1,59 @@
-from typing import FrozenSet, List
+from typing import FrozenSet
+from pydantic import BaseModel
 from .point import Point
 
 piece_names = ["Q", "B", "A", "G"]
 
 
-class Piece:
+class Piece(BaseModel):
+
     edge_width = 2
     half_width = int(edge_width / 2)
     double_width = int(edge_width * 2)
 
-    def __init__(self, point, symbol, owner):
+
+
+    def __init__(self, point: Point, symbol: str, owner: str):
         # core to a piece is its center
         self.center = point.copy(symbol, owner)
         self.symbol = symbol
-        self._init_nodes()
+
         self._init_surrounding_spots()
 
-    def _init_nodes(self):
+        # these are for display purposes
+        self._init_display()
+
+    def _init_surrounding_spots(self):
+        """
+        This initializes the surround spots that a piece can be placed
+        """
+
+        # Then we define the spots around the piece where another piece could
+        # be placed. We describe these positions as a compass. These are possible
+        # centers of  new points
+        self.north = self.center.shift(y=self.double_width, symbol="")
+        self.northeast = self.center.shift(
+            x=self.double_width, y=self.edge_width, symbol=""
+        )
+        self.southeast = self.northeast.shift(y=-self.double_width, symbol="")
+        self.south = self.center.shift(y=-self.double_width, symbol="")
+        self.southwest = self.center.shift(
+            x=-self.double_width, y=-self.edge_width, symbol=""
+        )
+        self.northwest = self.southwest.shift(y=self.double_width, symbol="")
+
+        self.available_spots = frozenset(
+            {
+                self.north,
+                self.northeast,
+                self.southeast,
+                self.south,
+                self.southwest,
+                self.northwest,
+            }
+        )
+
+    def _init_display(self):
         """
         this initializes the nodes and edges of the piece
         """
@@ -70,57 +107,7 @@ class Piece:
             }
         )
 
-    def _init_surrounding_spots(self):
-        """
-        This initializes the surround spots that a piece can be placed
-        """
-
-        # Then we define the spots around the piece where another piece could
-        # be placed. We describe these positions as a compass. These are possible
-        # centers of  new points
-        self.north = self.center.shift(y=self.double_width, symbol="")
-        self.northeast = self.center.shift(
-            x=self.double_width, y=self.edge_width, symbol=""
-        )
-        self.southeast = self.northeast.shift(y=-self.double_width, symbol="")
-        self.south = self.center.shift(y=-self.double_width, symbol="")
-        self.southwest = self.center.shift(
-            x=-self.double_width, y=-self.edge_width, symbol=""
-        )
-        self.northwest = self.southwest.shift(y=self.double_width, symbol="")
-
-        self.available_spots = frozenset(
-            {
-                self.north,
-                self.northeast,
-                self.southeast,
-                self.south,
-                self.southwest,
-                self.northwest,
-            }
-        )
-
     @property
     def points(self) -> FrozenSet[Point]:
         """ returns the points that define a piece """
         return frozenset(self.perimiter | {self.center} | self.edges)
-
-
-    def can_move(self, board: "Board") -> bool:
-        """
-        whether the piece can move
-        """
-        # you must have 2 adjacent sides free to slide out
-        #
-
-        return bool(self.available_spots - board.active_points.keys())
-
-    def possible_moves(self, board: "Board") -> List[Point]:
-        if not self.can_move:
-            return []
-        raise NotImplementedError("Logic for determining moves")
-
-    def touches(self, board: "Board") -> List[Point]:
-        touches = []
-        for point in self.available_spots:
-            occupied = board.active_points[point]

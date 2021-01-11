@@ -12,7 +12,6 @@ class Point(BaseModel):
     -, / and \\ which represent an edge
     Q, B, A, G which represent a piece
     " " - space which is empty
-
     """
 
     x: int
@@ -31,11 +30,10 @@ class Point(BaseModel):
             int(self.x + x),
             int(self.y + y),
             symbol or self.symbol,
-            owner=self.owner,
         )
 
     def copy(self, symbol, owner=None):
-        return Point(self.x, self.y, symbol, owner or self.owner)
+        return Point(self.x, self.y, symbol)
 
     def __hash__(self):
         return hash(self.coordinates)
