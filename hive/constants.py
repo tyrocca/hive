@@ -1,7 +1,12 @@
 from typing import NamedTuple
 
-PLAYER_1 = 'p1'
-PLAYER_2 = 'p2'
+PLAYER_1 = "p1"
+PLAYER_2 = "p2"
+
+# DIMENSIONS
+EDGE_WIDTH = 2
+HALF_WIDTH = int(EDGE_WIDTH / 2)
+DOUBLE_WIDTH = int(EDGE_WIDTH * 2)
 
 
 class PieceRole(NamedTuple):

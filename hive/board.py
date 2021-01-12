@@ -53,23 +53,22 @@ class Board:
 
         return len(found) == len(self.pieces)
 
-    def get_surrounding(self, point):
+    def get_surrounding(self):
         pass
 
-
     @property
-    def p1_pieces(self):
+    def p1_pieces(self) -> Set[Piece]:
         return filter(lambda p: p.player_1, self.pieces.values())
 
     @property
-    def p2_pieces(self):
+    def p2_pieces(self) -> Set[Piece]:
         return filter(lambda p: p.player_2, self.pieces.values())
 
     @property
     def all_available(self) -> Set[Point]:
         """ Returns a set of all the possible places that a piece can be placed """
         available_spots = reduce(
-            lambda acc, x: acc | x.available_spots, self.pieces, set()
+            lambda acc, x: acc | x.available_spots, self.pieces.values(), set()
         )  # type: Set[Point]
         return available_spots - self.centers
 
