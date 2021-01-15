@@ -46,6 +46,8 @@ class Point(NamedTuple):
     ) -> Tuple["Point", "Point", "Point", "Point", "Point", "Point"]:
         """
         This initializes the surround spots that a piece can be placed
+
+        Returns the spots in clockwise order
         """
         # Then we define the spots around the piece where another piece could
         # be placed. We describe these positions as a compass. These are possible

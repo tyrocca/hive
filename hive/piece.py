@@ -3,9 +3,6 @@ from functools import cached_property
 from .point import Point
 from .constants import PLAYER_1, PLAYER_2, EDGE_WIDTH, HALF_WIDTH
 
-# if TYPE_CHECKING:
-#     from .board import Board
-
 
 class Piece:
     """
@@ -15,6 +12,15 @@ class Piece:
         - these are N, NE, SE, S, SW, NE
     A Piece has also has a perimeter which is how it's displayed
     """
+
+    DIRECTIONS = (
+        "north",
+        "northeast",
+        "southeast",
+        "south",
+        "southwest",
+        "northwest",
+    )
 
     def __init__(
         self, point: Point, symbol: str, owner: str,

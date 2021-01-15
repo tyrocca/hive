@@ -1,6 +1,6 @@
 import random
 
-from typing import Set, Dict, Union, Optional
+from typing import Set, Dict, Union, Optional, List
 from functools import reduce
 
 from .point import Point
@@ -11,14 +11,44 @@ from .constants import PLAYER_1, PLAYER_2, PIECE_NAMES
 class Board:
 
     padding = 2
+    perimeter = 6
 
     def __init__(self, pieces: Dict[Piece, Piece] = None):
         # represents the pieces in play
+        # only a max of 22 pieces...
         self.pieces: Dict[Piece, Piece] = pieces or {}
 
         # TODO (tyrocca 2021-01-11): move out of this
         self.first_move()
         self.second_move()
+
+    @property
+    def p1_pieces(self) -> Set[Piece]:
+        return filter(lambda p: p.player_1, self.pieces.values())
+
+    @property
+    def p2_pieces(self) -> Set[Piece]:
+        return filter(lambda p: p.player_2, self.pieces.values())
+
+    @property
+    def all_open_spots(self) -> Set[Point]:
+        """ Returns a set of all the possible places that a piece can be placed """
+        surrounding_spots = reduce(
+            lambda acc, x: acc | x.available_spots, self.pieces.values(), set()
+        )  # type: Set[Point]
+        return surrounding_spots - self.centers
+
+    @property
+    def all_crawlable_spots(self) -> Set[Point]:
+        return {
+            spot.copy(symbol="?")
+            for spot in self.all_open_spots
+            if self.space_is_crawlable(spot)
+        }
+
+    @property
+    def centers(self) -> Set[Piece]:
+        return frozenset((p.center for p in self.pieces.values()))  # type: ignore
 
     def first_move(self):
         # all games start with 2 pieces placed, neither is initialized
@@ -30,8 +60,10 @@ class Board:
         self.second_piece = Piece(self.first_piece.north, "1", PLAYER_2)
         self.add_piece(self.second_piece)
 
-    def is_complete(self) -> bool:
+    def is_complete(self, remove_piece) -> bool:
         """ checks that the board is complete without breaks """
+        self.pieces.pop(remove_piece)
+
         start = next(iter(self.pieces.values()))
         if start is None:
             return True
@@ -53,28 +85,36 @@ class Board:
 
         return len(found) == len(self.pieces)
 
-    def get_surrounding(self):
-        pass
+    def space_is_crawlable(self, location: Union[Piece, Point]) -> bool:
+        """
+        Given a Point
+        - see if there are 2 adjacent borders that are free
+        """
+        points = Point.get_placeable_spots(location)
+        for idx, point in enumerate(points):
+            if point not in self.pieces:
+                adj_point = points[(idx + 1) % self.perimeter]
+                assert point != adj_point
+                if adj_point not in self.pieces:
+                    return True
+        return False
 
-    @property
-    def p1_pieces(self) -> Set[Piece]:
-        return filter(lambda p: p.player_1, self.pieces.values())
-
-    @property
-    def p2_pieces(self) -> Set[Piece]:
-        return filter(lambda p: p.player_2, self.pieces.values())
-
-    @property
-    def all_available(self) -> Set[Point]:
-        """ Returns a set of all the possible places that a piece can be placed """
-        available_spots = reduce(
-            lambda acc, x: acc | x.available_spots, self.pieces.values(), set()
-        )  # type: Set[Point]
-        return available_spots - self.centers
-
-    @property
-    def centers(self) -> Set[Piece]:
-        return frozenset((p.center for p in self.pieces.values()))  # type: ignore
+    def hoppable_spots(self, origin_piece: Piece):
+        """
+        Given a starting spot go in a single direction until there
+        is a free spot. You must hop at least 1
+        """
+        options: List[Point] = []
+        for direction in Piece.DIRECTIONS:
+            # check that at least 1 can be hopped over
+            next_point: Point = getattr(origin_piece, direction)
+            piece: Optional[Piece] = self.pieces.get(next_point)
+            if not piece:
+                continue
+            while piece:
+                next_spot = getattr(piece, direction)
+                piece = self.pieces.get(next_spot)
+            options.append(next_spot)
 
     def add_piece(self, piece: Piece):
         self.pieces[piece] = piece
@@ -113,16 +153,14 @@ class Board:
         """ This is what dumps the board """
         grid = []
         active_points = self.active_points
+        open_points = {p: p for p in self.all_open_spots}
 
         # we are going from max y -> min y, then max x to min x
         for y_p in range(self.max_y + self.padding, self.min_y - self.padding, -1):
             row = []
             for x_p in range(self.min_x - self.padding, self.max_x + self.padding):
                 point = Point(x_p, y_p)
-                if point not in active_points:
-                    row.append(point)
-                else:
-                    row.append(active_points[point])
+                row.append(active_points.get(point) or open_points.get(point) or point)
             grid.append(row)
 
         print("-" * (len(grid[0]) + 2))

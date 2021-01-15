@@ -11,9 +11,13 @@ class Game:
     def can_move(self, piece: Piece):
         if piece.covered_by:
             return False
-        elif not piece.can_hop and not piece.can_climb:
-            return
-            piece.is_stuck(board)
+        elif (
+            not piece.can_hop
+            and not piece.can_climb
+            and not board.space_is_crawlable(piece)
+        ):
+            return False
+
 
     """
     where should we put "available spots"
